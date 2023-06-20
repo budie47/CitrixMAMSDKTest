@@ -1,0 +1,102 @@
+package com.maxisuat.mvpntestapp.activities;
+
+import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
+import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.citrix.mvpn.api.MicroVPNSDK;
+import com.citrix.mvpn.api.MvpnDefaultHandler;
+import com.citrix.mvpn.exception.MvpnException;
+import com.citrix.mvpn.exception.NetworkTunnelNotStartedException;
+import com.maxisuat.mvpntestapp.R;
+import com.maxisuat.mvpntestapp.util.TunnelHandler;
+import com.maxisuat.mvpntestapp.util.VpnUtil;
+import com.maxisuat.mvpntestapp.webview.CustomWebViewClient;
+
+public class StartTunnelAndSendNetworkRequestActivity extends AppCompatActivity implements TunnelHandler.Callback {
+    private static final String TAG = "MVPN-StartTunnelReq";
+
+    private View progressBar;
+
+    private MvpnDefaultHandler mvpnHandler;
+
+    private WebView webView;
+
+    private WebViewClient webViewClient;
+
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.test_webview);
+
+        webView = findViewById(R.id.webview);
+        webView.clearCache(true);
+        webView.getSettings().setJavaScriptEnabled(true);
+        webView.getSettings().setAppCacheEnabled(false);
+        webView.getSettings().setCacheMode(WebSettings.LOAD_NO_CACHE);
+        webView.getSettings().setSaveFormData(false);
+        webViewClient = new CustomWebViewClient();
+        webView.setWebViewClient(webViewClient);
+
+        progressBar = findViewById(R.id.progressBar);
+
+        if (MicroVPNSDK.isNetworkTunnelRunning(this)) {
+            loadUrl();
+        } else {
+            if (mvpnHandler == null) {
+                mvpnHandler = new TunnelHandler(this);
+            }
+
+            if (VpnUtil.startTunnel(this, mvpnHandler)) {
+                progressBar.setVisibility(View.VISIBLE);
+            } else {
+                Toast.makeText(this, R.string.start_tunnel_failed_message, Toast.LENGTH_LONG).show();
+            }
+        }
+    }
+
+    @Override
+    public void onTunnelStarted() {
+        runOnUiThread(() -> {
+            progressBar.setVisibility(View.GONE);
+            loadUrl();
+        });
+    }
+
+    @Override
+    public void onError(boolean isSessionExpired) {
+        runOnUiThread(() -> {
+            progressBar.setVisibility(View.GONE);
+            if (isSessionExpired) {
+                if (VpnUtil.startTunnel(this, mvpnHandler)) {
+                    Toast.makeText(this, R.string.session_expired_message, Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(this, R.string.start_tunnel_failed_message, Toast.LENGTH_LONG).show();
+                }
+            } else {
+                Toast.makeText(this, R.string.start_tunnel_failed_message, Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
+    private void loadUrl() {
+        try {
+            webView = MicroVPNSDK.enableWebViewObjectForNetworkTunnel(this, webView, webViewClient);
+            webView.loadUrl(getIntent().getStringExtra(MainActivity.URL_KEY));
+        } catch (NetworkTunnelNotStartedException nte) {
+            Log.e(TAG, "Network Tunnel is not running:" + nte.getMessage());
+            if (!VpnUtil.startTunnel(this, mvpnHandler)) {
+                Toast.makeText(this, R.string.start_tunnel_failed_message, Toast.LENGTH_LONG).show();
+            }
+        } catch (MvpnException e) {
+            Log.e(TAG, e.getMessage());
+        }
+    }
+}

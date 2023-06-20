@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.maxisuat.mvpntestapp">
+
+    <application
+        android:name="com.maxisuat.mvpntestapp.MvpnCemTestApplication"
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme"
+        android:usesCleartextTraffic="true">
+
+        <activity
+            android:name="com.maxisuat.mvpntestapp.activities.MainActivity"
+            android:label="@string/main_title"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name="com.maxisuat.mvpntestapp.activities.SelectConnectionActivity"
+            android:label="@string/start_tunnel_title" />
+
+        <activity
+            android:name="com.maxisuat.mvpntestapp.activities.StartTunnelAndSendNetworkRequestActivity"
+            android:label="@string/webview_title" />
+
+        <activity
+            android:name="com.maxisuat.mvpntestapp.activities.WebViewActivity"
+            android:label="@string/webview_title" />
+
+        <activity
+            android:name="com.maxisuat.mvpntestapp.activities.OkHttpActivity"
+            android:label="@string/okhttp_title" />
+
+        <activity
+            android:name="com.maxisuat.mvpntestapp.activities.UrlConnectionActivity"
+            android:label="@string/url_connection_title" />
+
+        <uses-library
+            android:name="org.apache.http.legacy"
+            android:required="false" />
+    </application>
+
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <queries>
+        <package android:name="com.zenprise" />
+        <package android:name="com.citrix.Receiver" />
+    </queries>
+
+</manifest>
